@@ -1,0 +1,495 @@
+/* ==========================================
+   基本スタイル & レスポンシブ設計
+   ========================================== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #f4edd9;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* 外枠（ウィンドウぴったりに固定） */
+.viewport {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 画像とSVGを載せるステージ（アスペクト比をイラスト基準に固定） */
+.camera-stage {
+    position: absolute;
+    /* イラストの縦横比 (1000x1400) に合わせてサイズを定義 */
+    width: 100vw;
+    height: 140vw; 
+    min-height: 100vh;
+    min-width: 71.4vh; /* 1400:1000 の比率 */
+    
+    /* 初期演出終了後のデフォルト状態*/
+    transform: scale(1) translate(0px, 0px);
+    
+    /* 初期演出や遷移リセット時の滑らかな速度 */
+    transition: transform 3.0s cubic-bezier(0.25, 1, 0.5, 1);
+    transform-origin: center center;
+    cursor: grab;
+    z-index: 5;
+}
+
+/* ドラッグ中はtransitionを切る */
+.camera-stage.is-dragging {
+    transition: none !important;
+    cursor: grabbing;
+}
+
+/* 【初期状態】レコードプレーヤー周辺にドアップ（演出スタート時） */
+.camera-stage.is-zoomed {
+    transform: scale(2.8) translate(6%, 12%) !important;
+}
+
+/* 【ページ遷移時】超高速で特定の場所に突入するクラス */
+.camera-stage.is-transitioning {
+    transition: transform 0.65s cubic-bezier(0.6, -0.28, 0.735, 0.045) !important;
+    transform: scale(3.5) !important;
+}
+
+/* 背景イラスト */
+.main-visual {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    z-index: 1;
+}
+
+/* SVGクリッカブルレイヤー */
+.interactive-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.clickable-path {
+    pointer-events: auto;
+    cursor: pointer;
+    fill: rgba(0, 0, 0, 0); 
+    stroke: transparent;
+}
+
+/* ==========================================
+   【追加】下部固定帯スタイル
+   ========================================== */
+.bottom-banner {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 64px;             /* 帯の高さ（お好みに応じて変更してください） */
+    background-color: #f84628; /* 指定色 */
+    z-index: 80;               
+    display: block;            
+    padding: 0;                /* 縦いっぱいに合わせるため、上下のpaddingを0にします */
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1);
+    pointer-events: auto;      
+}
+
+/* 左側：homecafe.svg */
+.banner-logo-left {
+    position: absolute;
+    left: 0;                   /* 左端にぴったり合わせる場合（隙間を開けるなら 16px などに調整） */
+    top: 0;
+    height: 100%;              /* ★縦幅を帯にぴったり100%に合わせる */
+    width: auto;               /* 横幅は比率を維持して自動計算 */
+    object-fit: contain;       /* 画像が歪むのを防ぐ */
+    object-position: left center; /* 左寄せで中央配置 */
+}
+
+/* 右側：アートボード 1.svg */
+.banner-logo-right {
+    position: absolute;
+    right: 0;                  /* 右端にぴったり合わせる場合 */
+    top: 0;
+    height: 100%;              /* ★縦幅を帯にぴったり100%に合わせる */
+    width: auto;               /* 横幅は比率を維持して自動計算 */
+    object-fit: contain;       /* 画像が歪むのを防ぐ */
+    object-position: right center; /* 右寄せで中央配置 */
+}
+
+/* ==========================================
+   ハンバーガーボタン
+   ========================================== */
+.menu-trigger {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    background-color: rgba(226, 27, 34, 0.95);
+    border: none;
+    border-radius: 50%;
+    z-index: 100;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.8s ease, transform 0.8s ease, z-index 0.3s;
+}
+
+.menu-trigger.is-visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.menu-trigger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background-color: #ffffff;
+    transition: transform 0.3s, opacity 0.3s;
+}
+
+.menu-trigger.is-active span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+.menu-trigger.is-active span:nth-child(2) { opacity: 0; }
+.menu-trigger.is-active span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+/* ==========================================
+   全画面メニューのオーバーレイ表示
+   ========================================== */
+.menu-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(244, 237, 217, 0.92); 
+    z-index: 90;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 35px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.menu-overlay.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.overlay-link {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333333;
+    text-decoration: none;
+    letter-spacing: 3px;
+    padding: 10px 20px;
+    transition: color 0.2s, transform 0.2s;
+}
+
+.overlay-link:active {
+    color: #e21b22;
+    transform: scale(0.95);
+}
+
+/* ページ遷移直前のホワイトアウト */
+.flash-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #f4edd9;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease-in;
+}
+.flash-overlay.is-active {
+    opacity: 1;
+}
+/* ==========================================
+   お礼メッセージ ポップアップスタイル（間借り喫茶ナチュラルスタイル）
+   ========================================== */
+.welcome-popup {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* 背景の暗幕：珈琲をイメージした、少し赤みと温かみのある深めのダークブラウン（透過50%） */
+    background-color: rgba(54, 47, 45, 0.5); 
+    z-index: 200;                         
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    padding: 20px;
+}
+
+/* ポップアップ表示時 */
+.welcome-popup.is-show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* メッセージカード本体 */
+.popup-content {
+    background-color: #fcfaf2;   /* 温かみのあるアイボリー・生成り紙のような白 */
+    border: 2px solid #d4b285;    /* 枠線：真鍮やラテアートをイメージしたソフトゴールド */
+    border-radius: 16px;          /* レトロで優しい印象の角丸 */
+    padding: 35px 25px;
+    text-align: center;
+    max-width: 440px;             /* テキストの改行がスマホでも綺麗に収まる横幅 */
+    width: 100%;
+    box-shadow: 0 15px 35px rgba(54, 47, 45, 0.15);
+    transform: scale(0.9);
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+}
+
+.welcome-popup.is-show .popup-content {
+    transform: scale(1);
+}
+
+/* タイトル：『ハレの日の606』 */
+.popup-content h2 {
+    font-size: 22px;              /* 日本語が綺麗に見えるサイズに微調整 */
+    color: #c99a5c;               
+    margin-bottom: 6px;           /* feat. との距離を近づける */
+    letter-spacing: 2px;          
+    font-weight: 600;
+}
+
+/* 【追加】コラボ・クレジット部分 */
+.popup-content .popup-feature {
+    font-size: 14px;
+    font-family: 'Georgia', serif; /* クラシックでおしゃれな英字フォント */
+    color: #c99a5c;               /* タイトルと同じ色 */
+    margin-bottom: 24px;          /* 本文との間に余白を作る */
+    letter-spacing: 1px;
+    font-weight: 500;
+}
+
+/* メインのメッセージ文章 */
+.popup-content .popup-sub {
+    font-size: 14px;
+    color: #3e3531;               /* 珈琲色 */
+    line-height: 2.1;             /* 行間をさらにゆったり広げて心地よさを演出 */
+    font-weight: 600;             /* メッセージをしっかり読ませる太さに */
+    margin-bottom: 30px;          
+}
+/* 【追加】署名（メンバー名）のスタイリング */
+.popup-content .popup-signature {
+    font-size: 12px;
+    color: #7a6e67;               /* メイン文章より少し淡いココアブラウン */
+    text-align: right;            /* 右寄せにしてカード全体のレイアウトにメリハリを */
+    padding-right: 10px;          /* 右端にぴったりくっつきすぎない調整 */
+    line-height: 1.6;
+    font-weight: normal;
+    letter-spacing: 0.5px;
+}
+
+/* タップを促す誘導テキスト */
+.popup-close-hint {
+    margin-top: 30px;
+    font-size: 11px;
+    color: #bfaea7;               /* 主張しすぎない淡いブラウングレー */
+    letter-spacing: 1px;
+    animation: pulse 2.0s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
+}
+/* ==========================================
+   リンク集ページ（links.html）専用スタイル
+   ========================================== */
+html:has(body.links-page-body),
+body.links-page-body {
+    overflow-y: auto !important; /* links.htmlの時だけ縦スクロールを解禁 */
+    height: auto !important;    
+}
+.links-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 100vh;
+    background-color: rgba(244, 237, 217, 0.90);
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* 【修正】center から flex-start に変更（上の余白を保つため） */
+    padding: 80px 16px 40px 16px;
+}
+
+/* 背景の固定表示 */
+.links-page-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    overflow: hidden;
+    background-color: #f4edd9;
+    pointer-events: none; /* 【追加】背景画像がスクロールの邪魔をしないように透過 */
+}
+.links-page-bg .bg-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(2px);
+}
+
+.links-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    background-color: rgba(244, 237, 217, 0.90);
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 80px 16px 40px 16px; /* スマホ用に横の余白を少し調整 */
+    overflow-y: auto;
+}
+
+.back-to-home {
+    position: fixed;
+    top: 24px;
+    left: 24px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #3e3531;
+    text-decoration: none;
+    letter-spacing: 1px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.back-to-home:active { color: #f84628; }
+
+.links-board {
+    max-width: 440px;
+    width: 100%;
+    background: #fcfaf2;
+    border: 2px solid #d4b285;
+    border-radius: 16px;
+    padding: 30px 20px;
+    box-shadow: 0 15px 35px rgba(54, 47, 45, 0.1);
+    margin: auto;
+}
+
+.links-header {
+    text-align: center;
+    margin-bottom: 24px;
+    border-bottom: 1px dashed #d4b285;
+    padding-bottom: 20px;
+}
+.links-header h2 {
+    font-size: 24px;
+    color: #c99a5c;
+    letter-spacing: 3px;
+    margin-bottom: 6px;
+}
+.links-header .links-sub {
+    font-size: 12px;
+    color: #8a7b75;
+}
+
+.links-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px; /* カード同士の縦の間隔 */
+}
+
+/* 【重要修正】複数アカウント対応カードレイアウト */
+.link-card {
+    display: flex;
+    flex-direction: column;   /* 上に名前、下にSNSボタンという縦並び構造に変更 */
+    gap: 12px;
+    padding: 16px;
+    background-color: #f4edd9;
+    border-radius: 10px;
+    border: 1px solid rgba(212, 178, 133, 0.3);
+}
+
+/* メンバー情報（肩書き＋名前）の並び */
+.card-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.link-card .member-role {
+    font-size: 10px;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #c99a5c;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+.link-card .member-name {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: #3e3531;
+}
+
+/* SNSボタンを横並びにする（はみ出る場合は自動で折り返す）コンテナ */
+.sns-links-group {
+    display: flex;
+    flex-wrap: wrap;          /* 横幅がいっぱいになったら自動で2行目に落とす */
+    gap: 8px;                 /* ボタン同士の隙間 */
+}
+
+/* SNSボタンの共通デザイン */
+.sns-button {
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background-color: #fcfaf2; /* ボタンの背景はアイボリー */
+    border: 1px solid #d4b285; /* 真鍮ゴールドの枠線 */
+    color: #7a6e67;
+    transition: background-color 0.2s, color 0.2s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* タップしたときのアニメーション効果 */
+.sns-button:active {
+    transform: scale(0.95);
+    background-color: #e21b22; /* カフェの赤 */
+    color: #ffffff;
+    border-color: #e21b22;
+}

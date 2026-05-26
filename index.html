@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Home Cafe</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="viewport">
+        
+        <div id="flash-overlay" class="flash-overlay"></div>
+        
+        <button id="menu-trigger" class="menu-trigger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <nav id="menu-overlay" class="menu-overlay">
+            <a href="#" class="overlay-link" id="lnk-greeting">ご挨拶</a>
+            <a href="#" class="overlay-link" id="lnk-links">LINKS</a>
+            <a href="#" class="overlay-link" id="lnk-menu" data-target-x="85%" data-target-y="50%">MENU</a>
+            <a href="#" class="overlay-link" id="lnk-about" data-target-x="46%" data-target-y="30%">ABOUT</a>
+        </nav>
+        
+        <div id="camera-stage" class="camera-stage is-zoomed">
+            <img src="assets/images/main-visual.png" alt="Home Cafe" class="main-visual">
+
+            <svg class="interactive-overlay" viewBox="0 0 1000 1400" preserveAspectRatio="xMidYMid slice">
+                <circle id="area-record" class="clickable-path" cx="465" cy="405" r="65" />
+                <path id="area-bakery" class="clickable-path" d="M 650,450 L 1000,450 L 1000,850 L 650,620 Z" />
+            </svg>
+        </div>
+
+        <div class="bottom-banner">
+            <img src="assets/images/homecafe.svg" alt="Home Cafe" class="banner-logo-left">
+            <img src="assets/images/アートボード 1.svg" alt="Bakery and Coffee" class="banner-logo-right">
+        </div>
+
+        <div id="welcome-popup" class="welcome-popup">
+            <div class="popup-content">
+                <h2>『ハレの日の606』</h2>
+                <p class="popup-feature">feat. WeThere Coffee</p>
+                
+                <p class="popup-sub">
+                    ご来店いただきありがとうございます。<br>
+                    本日は、1日限りの特別な間借り喫茶です。<br>
+                    今日という日が、みなさんにとって<br>
+                    ハッピーで心地よい時間となりますように☕
+                </p>
+                
+                <p class="popup-signature">
+                    [cafe 606] 高井豪士・風花<br>
+                    [WeThere Coffee] 岡本千明
+                </p>
+                
+                <div class="popup-close-hint">画面をタップして閉じる</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
