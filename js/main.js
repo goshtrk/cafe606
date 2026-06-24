@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetY = link.getAttribute('data-target-y');
             
             let url = 'index.html';
-            if(link.id === 'lnk-menu') url = 'menu.html';
+            if(link.id === 'lnk-menu') url = 'menu.pdf';
             if(link.id === 'lnk-about') url = 'about.html';
             // 【追加】LINKSが押された時の遷移先を指定
             if(link.id === 'lnk-links') url = 'links.html';
